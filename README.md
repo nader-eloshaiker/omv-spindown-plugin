@@ -29,6 +29,10 @@ This plugin does the waiting for them:
 - ✅ **Shows what is going on**: for each disk, whether it is asleep or
   in use, how soon it will sleep, and when it last went to sleep.
 
+![Storage › Spin down lists each hard disk, how long it may sit idle and whether it is asleep](docs/images/spin-down-disks.png)
+
+![Editing a disk: choose Put to sleep after from a list](docs/images/spin-down-edit.png)
+
 Disks that do sleep by themselves are not affected: they are already
 asleep when the plugin checks, so it does nothing.
 

@@ -37,11 +37,11 @@ data:
       - name: _("Status")
         prop: statustext
         flexGrow: 2
-      - name: _("Last put to sleep")
+      - name: _("Last slept")
         prop: laststandby
         flexGrow: 1
         cellTemplateName: relativeTime
-      - name: _("Times put to sleep")
+      - name: _("Times slept")
         prop: spindowns
         flexGrow: 1
     actions:
