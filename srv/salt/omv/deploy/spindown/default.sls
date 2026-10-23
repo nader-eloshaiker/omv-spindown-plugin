@@ -13,9 +13,9 @@
 # You should have received a copy of the GNU General Public License
 # along with openmediavault-spindown. If not, see <http://www.gnu.org/licenses/>.
 
-{% set config = salt['omv_conf.get']('conf.service.spindown') %}
-# The spindown time of each disk is the one set in Storage > Disks (the
-# same setting smartctl-hdparm gives the disk's own timer).
+# The spindown time of each disk is the one set in Storage > Disks or on
+# the Spin down page (the same setting smartctl-hdparm gives the disk's own
+# timer). The daemon runs while at least one disk has one.
 {% set hdparm_config = salt['omv_conf.get']('conf.system.hdparm') %}
 {% set disks = [] %}
 {% for device in hdparm_config %}
@@ -32,13 +32,13 @@ configure_spindownd:
       - salt://{{ tpldir }}/files/etc-spindownd-spindownd_json.j2
     - template: jinja
     - context:
-        config: {{ {'enable': config.enable | to_bool, 'disks': disks} | json }}
+        config: {{ {'enable': disks | length > 0, 'disks': disks} | json }}
     - makedirs: True
     - user: root
     - group: root
     - mode: '0644'
 
-{% if config.enable | to_bool %}
+{% if disks | length > 0 %}
 
 start_spindownd_service:
   service.running:

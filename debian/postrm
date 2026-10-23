@@ -28,8 +28,6 @@ case "$1" in
     purge)
         if [ "${OMV_AVAILABLE}" = "true" ]; then
             dpkg-trigger update-workbench
-            # omv-confdbadm cannot be used here, the datamodel is gone.
-            omv_config_delete "/config/services/spindown"
         fi
         rm -rf /etc/spindownd
     ;;

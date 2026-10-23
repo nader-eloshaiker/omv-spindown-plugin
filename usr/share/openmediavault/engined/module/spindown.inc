@@ -34,22 +34,25 @@ class OMVModuleSpindown extends \OMV\Engine\Module\ServiceAbstract
 
 	public function getStatus()
 	{
+		// Runs whenever a disk has a spindown time in Storage > Disks.
 		$db = \OMV\Config\Database::getInstance();
-		$object = $db->get("conf.service.spindown");
+		$enabled = FALSE;
+		foreach ($db->get("conf.system.hdparm") as $object) {
+			$enabled = $enabled || $object->get("spindowntime") > 0;
+		}
 		$systemCtl = new \OMV\System\SystemCtl("spindownd");
 		return [
 			"name" => $this->getName(),
 			"title" => gettext("Disk spin down"),
-			"enabled" => $object->get("enable"),
+			"enabled" => $enabled,
 			"running" => $systemCtl->isActive()
 		];
 	}
 
 	public function bindListeners(\OMV\Engine\Notify\Dispatcher $dispatcher)
 	{
-		$dispatcher->addListener(OMV_NOTIFY_MODIFY,
-			"org.openmediavault.conf.service.spindown", [$this, "setDirty"]);
-		// The spindown times come from Storage > Disks.
+		// The spindown times are those of Storage > Disks, also set from
+		// the Spin down page.
 		$dispatcher->addListener(
 			OMV_NOTIFY_CREATE | OMV_NOTIFY_MODIFY | OMV_NOTIFY_DELETE,
 			"org.openmediavault.conf.system.hdparm", [$this, "setDirty"]);

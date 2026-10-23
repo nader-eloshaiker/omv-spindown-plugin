@@ -1,0 +1,61 @@
+version: "1.0"
+type: component
+data:
+  name: omv-storage-spindown-edit-form-page
+  type: formPage
+  config:
+    request:
+      service: Spindown
+      get:
+        method: getDisk
+        params:
+          devicefile: "{{ _routeParams.devicefile }}"
+      post:
+        method: setDisk
+    fields:
+      - type: hidden
+        name: devicefile
+      - type: textInput
+        name: description
+        label: _("Disk")
+        value: ""
+        disabled: true
+        submitValue: false
+      - type: select
+        name: spindowntime
+        label: _("Put to sleep after")
+        hint: _("How long the disk must go without any reads or writes before it is put to sleep. This is the same setting as the disk's Spindown time in Storage › Disks.")
+        value: 0
+        store:
+          data:
+            - text: _("Never")
+              value: 0
+            - text: _("5 minutes")
+              value: 60
+            - text: _("10 minutes")
+              value: 120
+            - text: _("20 minutes")
+              value: 240
+            - text: _("30 minutes")
+              value: 241
+            - text: _("1 hour")
+              value: 242
+            - text: _("2 hours")
+              value: 244
+            - text: _("3 hours")
+              value: 246
+            - text: _("4 hours")
+              value: 248
+            - text: _("5 hours")
+              value: 250
+            - text: _("5 hours 30 minutes")
+              value: 251
+    buttons:
+      - template: submit
+        execute:
+          type: url
+          url: "/storage/spindown"
+      - template: cancel
+        execute:
+          type: url
+          url: "/storage/spindown"

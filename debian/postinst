@@ -25,19 +25,12 @@ case "$1" in
         # Activate package triggers.
         dpkg-trigger update-workbench
 
-        # Initialize and migrate configuration database.
-        echo "Updating configuration database ..."
-        omv-confdbadm create "conf.service.spindown"
-        if [ -n "$2" ]; then
-            # omv-confdbadm only accepts PEP 440 versions.
-            omv-confdbadm migrate "conf.service.spindown" "${2%%~*}"
-        fi
-
         # Salt notices changed states by modification time, and dpkg stamps
         # files with the changelog date, so a rebuilt package of the same
         # version would keep using salt's cached copy. Refresh the times.
         touch /srv/salt/omv/deploy/spindown/*.sls \
             /srv/salt/omv/deploy/spindown/files/* || :
+        # Start watching the disks that already have a spindown time.
         omv-salt deploy run --no-color --quiet spindown || :
     ;;
 

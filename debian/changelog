@@ -4,8 +4,8 @@ openmediavault-spindown (8.0.0) stable; urgency=low
     timer openmediavault sets, using the same spindown time from
     Storage > Disks. Activity is read from kernel counters and the
     standby command skips sleeping disks, so no disk is ever woken.
-  * Storage > Spin down: an on/off setting and a Disks page showing each
-    disk's spindown time, how long it has been idle, whether it is
-    asleep and when it was last spun down.
+  * Storage > Spin down lists the hard disks: select one, click Edit and
+    choose how long it may sit idle. The list shows whether each disk is
+    asleep or in use, how soon it will sleep and when it last slept.
 
  -- Nader Eloshaiker <1904325+nader-eloshaiker@users.noreply.github.com>  Fri, 23 Oct 2026 15:00:00 +1100

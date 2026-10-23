@@ -1,11 +1,30 @@
 [{
 	"type": "rpc",
-	"id": "rpc.spindown.setsettings",
+	"id": "rpc.spindown.getdisk",
 	"params": {
 		"type": "object",
 		"properties": {
-			"enable": {
-				"type": "boolean",
+			"devicefile": {
+				"type": "string",
+				"format": "devicefile",
+				"required": true
+			}
+		}
+	}
+},{
+	"type": "rpc",
+	"id": "rpc.spindown.setdisk",
+	"params": {
+		"type": "object",
+		"properties": {
+			"devicefile": {
+				"type": "string",
+				"format": "devicefile",
+				"required": true
+			},
+			"spindowntime": {
+				"type": "integer",
+				"enum": [ 0, 60, 120, 240, 241, 242, 244, 246, 248, 250, 251 ],
 				"required": true
 			}
 		}

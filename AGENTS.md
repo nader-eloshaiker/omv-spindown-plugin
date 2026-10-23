@@ -5,7 +5,9 @@ hard disks which ignore the standby timer OMV gives them. A small Python
 daemon (`usr/sbin/spindownd`) watches `/sys/block/*/stat` and sends
 `smartctl -n standby -s standby,now`; OMV (PHP RPC, salt, YAML workbench)
 configures it. The spindown time per disk is OMV's own
-(`conf.system.hdparm`, Storage › Disks).
+(`conf.system.hdparm`, Storage › Disks); the plugin's page edits it through
+`DiskMgmt.setHdParm`. There is no settings object of its own: the daemon
+runs while any disk has a spindown time.
 
 ## Rules that always apply
 
@@ -19,9 +21,11 @@ configures it. The spindown time per disk is OMV's own
 4. **Versions are PEP 440** (`8.0.N`; major = OMV major; no `~`). New
    config fields need a version bump and a confdb migration. Defaults live
    only in the datamodel.
-5. Spinning disks down and up is a hardware action: tests on a real NAS
+5. **No Linux knowledge needed in the UI**: settings are clicks (selects,
+   checkboxes), in plain words; never free-text device paths or values.
+6. Spinning disks down and up is a hardware action: tests on a real NAS
    need the owner's consent. Agents never type passwords.
-6. Run `make test` before every build.
+7. Run `make test` before every build.
 
 ## Layout
 
@@ -30,7 +34,7 @@ configures it. The spindown time per disk is OMV's own
 | `usr/sbin/spindownd` | the daemon (`run`, `status`) |
 | `tests/test_spindownd.py` | unit tests with a fake clock and fake disks |
 | `srv/salt/omv/deploy/spindown/` | writes `/etc/spindownd/spindownd.json`, starts/stops the service |
-| `usr/share/openmediavault/` | datamodels, RPC (`Spindown`), engine module, workbench pages (Storage › Spin down) |
+| `usr/share/openmediavault/` | RPC (`Spindown`), engine module, workbench pages (Storage › Spin down list + edit form) |
 | `debian/` | packaging; the unit is `openmediavault-spindown.spindownd.service` |
 | `docs/` | the GitHub Pages site (`index.md`) |
 

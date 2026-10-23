@@ -22,15 +22,16 @@ has many reports.)
 
 This plugin does the waiting for them:
 
-- ✅ **Uses the Spindown time you already set** in Storage › Disks. Nothing
-  new to configure, and a disk with spindown *Disabled* is left alone.
+- ✅ **Point and click**: pick a disk, click **Edit**, choose how long it may
+  sit idle. No commands, no settings files. A Spindown time you already
+  set in Storage › Disks is picked up as it is.
 - ✅ **Never wakes a sleeping disk.** It watches the kernel's activity
   counters, which does not touch the disk, and the sleep command does
   nothing to a disk that is already asleep.
 - ✅ **Puts it back to sleep after every wake-up**, whether a file was
   read or written.
-- ✅ **Shows what is going on**: each disk's spindown time, how long it has
-  been idle, whether it is asleep, and when it last went to sleep.
+- ✅ **Shows what is going on**: for each disk, whether it is asleep or
+  in use, how soon it will sleep, and when it last went to sleep.
 
 Disks that do sleep by themselves are not affected: they are already
 asleep when the plugin checks, so it does nothing.
@@ -41,24 +42,32 @@ asleep when the plugin checks, so it does nothing.
    [latest release](https://github.com/nader-eloshaiker/omv-spindown-plugin/releases/latest).
 2. In the OMV web interface open **System › Plugins**, click **Upload**,
    choose the file, then select the plugin and click **Install**.
-3. Make sure your disks have a **Spindown time** in **Storage › Disks**
-   (edit the disk).
-4. Open **Storage › Spin down › Settings**, tick **Spin down idle disks**,
-   click **Save**, then **Apply**.
-5. **Storage › Spin down › Disks** shows each disk going to sleep.
+3. Open **Storage › Spin down**. It lists your hard disks.
+4. Select a disk, click **Edit**, choose **Put to sleep after** (for
+   example *10 minutes*) and click **Save**. Do the same for each disk.
+5. Click **Apply** in the yellow bar at the top.
+
+The **Status** column then counts down to sleep and shows *Asleep* once
+the disk is sleeping. Choose *Never* for a disk that should stay awake.
 
 ## Still awake?
 
-The plugin only helps when nothing is using the disk. If the Disks page
-shows a disk that never stays idle for its spindown time, something is
+The plugin only helps when nothing is using the disk. If the Spin down
+page shows a disk that never stays idle for its spindown time, something is
 reading or writing it: Docker containers or apps with data on that disk,
 media servers scanning libraries, clients browsing shares, or ZFS with
 `atime=on`. Move busy app data to an SSD, and keep the hard disks for
 bulk storage.
 
+Clicking **Apply** in OMV, or installing a plugin, wakes every hard disk
+for a moment: OMV's configuration tool (Salt) scans the disks for LVM
+volumes each time it runs. The disks go back to sleep after their time.
+
 ## How it works
 
-Every 30 seconds `spindownd` reads `/sys/block/<disk>/stat`, the
+The time you choose is stored as the disk's *Spindown time*, the same
+setting as in Storage › Disks, so both pages always agree. Every 30
+seconds `spindownd` reads `/sys/block/<disk>/stat`, the
 kernel's count of completed reads and writes. When a disk's count has
 not changed for its spindown time, it runs
 `smartctl -n standby -s standby,now` on it once. `-n standby` means

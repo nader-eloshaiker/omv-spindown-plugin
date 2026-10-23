@@ -1,0 +1,8 @@
+version: "1.0"
+type: route
+data:
+  url: "/storage/spindown/edit/:devicefile"
+  title: _("Edit")
+  editing: true
+  notificationTitle: _("Saved. Click Apply to start using the new time.")
+  component: omv-storage-spindown-edit-form-page

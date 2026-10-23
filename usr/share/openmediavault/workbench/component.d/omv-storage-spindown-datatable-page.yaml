@@ -1,0 +1,51 @@
+version: "1.0"
+type: component
+data:
+  name: omv-storage-spindown-datatable-page
+  type: datatablePage
+  config:
+    hints:
+      - type: info
+        dismissible: true
+        stateId: 9c41d7e2-3b5a-4f86-a1d0-6e2b8c7f5a93
+        text: _("Choose how long each hard disk may sit idle before it is put to sleep. Select a disk, click <b>Edit</b> and pick a time. A sleeping disk is never woken to check on it, and it wakes by itself the next time something reads or writes it.")
+    autoReload: 10000
+    hasSearchField: false
+    limit: 0
+    selectionType: single
+    stateId: 4b8e2f61-6a3d-4c1e-9f27-5d0b7a9c3e14
+    rowId: device
+    store:
+      proxy:
+        service: Spindown
+        get:
+          method: getDisks
+    columns:
+      - name: _("Disk")
+        prop: device
+        flexGrow: 1
+      - name: _("Model")
+        prop: model
+        flexGrow: 2
+      - name: _("Capacity")
+        prop: size
+        flexGrow: 1
+        cellTemplateName: binaryUnit
+      - name: _("Sleeps after")
+        prop: sleepafter
+        flexGrow: 1
+      - name: _("Status")
+        prop: statustext
+        flexGrow: 2
+      - name: _("Last put to sleep")
+        prop: laststandby
+        flexGrow: 1
+        cellTemplateName: relativeTime
+      - name: _("Times put to sleep")
+        prop: spindowns
+        flexGrow: 1
+    actions:
+      - template: edit
+        execute:
+          type: url
+          url: "/storage/spindown/edit/{{ _selected[0].devicefile | encodeuricomponent }}"
