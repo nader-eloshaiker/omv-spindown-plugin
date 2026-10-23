@@ -1,0 +1,11 @@
+openmediavault-spindown (8.0.0) stable; urgency=low
+
+  * First release: spin down idle hard disks that ignore the standby
+    timer openmediavault sets, using the same spindown time from
+    Storage > Disks. Activity is read from kernel counters and the
+    standby command skips sleeping disks, so no disk is ever woken.
+  * Storage > Spin down: an on/off setting and a Disks page showing each
+    disk's spindown time, how long it has been idle, whether it is
+    asleep and when it was last spun down.
+
+ -- Nader Eloshaiker <1904325+nader-eloshaiker@users.noreply.github.com>  Fri, 23 Oct 2026 15:00:00 +1100

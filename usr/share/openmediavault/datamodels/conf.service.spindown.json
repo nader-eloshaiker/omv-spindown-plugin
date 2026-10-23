@@ -1,0 +1,15 @@
+{
+	"type": "config",
+	"id": "conf.service.spindown",
+	"title": "Disk spin down",
+	"queryinfo": {
+		"xpath": ".//services/spindown",
+		"iterable": false
+	},
+	"properties": {
+		"enable": {
+			"type": "boolean",
+			"default": false
+		}
+	}
+}

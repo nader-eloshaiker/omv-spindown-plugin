@@ -1,0 +1,19 @@
+# GitHub Pages site for openmediavault-spindown (built from /docs).
+title: openmediavault-spindown
+description: >-
+  Free OpenMediaVault plugin that makes idle hard disks sleep when they
+  ignore their spindown time, such as WD Red drives. Never wakes a disk.
+url: https://nader-eloshaiker.github.io
+baseurl: /omv-spindown-plugin
+lang: en
+theme: jekyll-theme-cayman
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+  - jekyll-relative-links
+relative_links:
+  enabled: true
+  collections: false
+github:
+  is_project_page: true
+  repository_url: https://github.com/nader-eloshaiker/omv-spindown-plugin

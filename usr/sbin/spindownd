@@ -1,0 +1,328 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+#
+# This file is part of openmediavault-spindown.
+#
+# openmediavault-spindown is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+#
+# openmediavault-spindown is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with openmediavault-spindown. If not, see <http://www.gnu.org/licenses/>.
+"""
+spindownd - spin down idle hard disks that ignore their own standby timer.
+
+openmediavault sets each disk's standby timer (Storage > Disks > Spindown
+time), and the disk is meant to sleep by itself after that long without
+a command. Some disks, notably WD Red drives, stop honouring that timer
+but still obey an immediate standby. spindownd watches each disk's I/O
+counters and, after the same spindown time without a read or write,
+sends that immediate standby.
+
+It never wakes a disk:
+  - activity comes from /sys/block/<disk>/stat, kernel counters that are
+    read without touching the disk;
+  - the standby command is `smartctl -n standby -s standby,now`, which
+    does nothing if the disk is already asleep.
+S.M.A.R.T. queries (smartd, temperature monitors) do not show up in the
+counters, so they neither count as activity nor keep a disk awake here.
+
+Sub-commands:
+  run       Run the watch loop (used by spindownd.service).
+  status    Print what the daemon last saw.
+"""
+
+import argparse
+import json
+import os
+import signal
+import subprocess
+import sys
+import threading
+import time
+
+CONFIG_FILE = "/etc/spindownd/spindownd.json"
+STATUS_FILE = "/run/spindownd/status.json"
+SYS_BLOCK = "/sys/block"
+POLL_SECONDS = 30
+
+# Fields of /sys/block/<disk>/stat that count completed requests: reads,
+# writes, discards, flushes (older kernels have only the first 11 fields).
+STAT_COUNTERS = (0, 4, 11, 15)
+
+
+def log(message):
+    print(message, flush=True)
+
+
+def standby_seconds(value):
+    """Seconds of the ATA standby timer value OMV stores (spindowntime),
+    or None when it is off or has no fixed length.
+
+    1-240: multiples of 5 seconds; 241-251: multiples of 30 minutes;
+    252: 21 minutes; 253: vendor specific; 254: reserved;
+    255: 21 minutes 15 seconds.
+    """
+    try:
+        value = int(value)
+    except (TypeError, ValueError):
+        return None
+    if 1 <= value <= 240:
+        return value * 5
+    if 241 <= value <= 251:
+        return (value - 240) * 1800
+    if value == 252:
+        return 21 * 60
+    if value == 255:
+        return 21 * 60 + 15
+    return None
+
+
+def kernel_name(devicefile):
+    """sda for /dev/disk/by-id/ata-..., /dev/sda, or None if missing."""
+    path = os.path.realpath(devicefile)
+    if not path.startswith("/dev/") or not os.path.exists(path):
+        return None
+    return os.path.basename(path)
+
+
+def read_text(path):
+    try:
+        with open(path) as f:
+            return f.read().strip()
+    except OSError:
+        return None
+
+
+def io_count(name, sys_block=SYS_BLOCK):
+    """Completed requests of a disk so far, or None if it is gone."""
+    text = read_text(os.path.join(sys_block, name, "stat"))
+    if text is None:
+        return None
+    fields = text.split()
+    try:
+        return sum(int(fields[i]) for i in STAT_COUNTERS if i < len(fields))
+    except ValueError:
+        return None
+
+
+def disk_model(name, sys_block=SYS_BLOCK):
+    return read_text(os.path.join(sys_block, name, "device", "model")) or ""
+
+
+def send_standby(devicefile):
+    """Put a disk to sleep unless it already is.
+
+    Returns "spun_down", "asleep" (it was already) or "failed".
+    """
+    try:
+        proc = subprocess.run(
+            ["smartctl", "-n", "standby", "-s", "standby,now", devicefile],
+            capture_output=True, text=True, timeout=60)
+    except (OSError, subprocess.SubprocessError):
+        return "failed"
+    # -n standby: exit status 2 and nothing sent if the disk is asleep.
+    if proc.returncode == 2:
+        return "asleep"
+    if "STANDBY mode" in proc.stdout:
+        return "spun_down"
+    return "failed"
+
+
+class Disk:
+    """What spindownd knows about one disk."""
+
+    def __init__(self, devicefile, seconds, now):
+        self.devicefile = devicefile
+        self.seconds = seconds
+        self.name = None
+        self.model = ""
+        self.io = None
+        # Wait a whole spindown time after start: whatever the disk did
+        # before is unknown.
+        self.changed_at = now
+        self.sent_at = None
+        # active: did I/O since the last standby; standby: asleep as far
+        # as we know; unknown: not checked yet; missing; failed.
+        self.state = "unknown"
+        self.last_standby = None
+        self.spindowns = 0
+
+    def as_dict(self, now):
+        return {
+            "devicefile": self.devicefile,
+            "device": self.name,
+            "model": self.model,
+            "timeout": self.seconds,
+            "idle": int(now - self.changed_at) if self.name else None,
+            "state": self.state,
+            "last_standby": self.last_standby,
+            "spindowns": self.spindowns,
+        }
+
+
+class Watcher:
+    """The watch loop, with the clock and the disk access injectable."""
+
+    def __init__(self, disks, monotonic=time.monotonic, wall=time.time,
+                 io_count=io_count, disk_model=disk_model,
+                 kernel_name=kernel_name, send_standby=send_standby):
+        self.monotonic = monotonic
+        self.wall = wall
+        self.io_count = io_count
+        self.disk_model = disk_model
+        self.kernel_name = kernel_name
+        self.send_standby = send_standby
+        now = monotonic()
+        self.disks = [Disk(d["devicefile"], d["seconds"], now) for d in disks]
+
+    def poll(self):
+        now = self.monotonic()
+        for disk in self.disks:
+            self.check(disk, now)
+
+    def check(self, disk, now):
+        name = self.kernel_name(disk.devicefile)
+        io = self.io_count(name) if name else None
+        if io is None:
+            if disk.state != "missing":
+                log("%s: not found" % disk.devicefile)
+            disk.name, disk.io, disk.state = None, None, "missing"
+            disk.changed_at, disk.sent_at = now, None
+            return
+        if name != disk.name:
+            disk.name = name
+            disk.model = self.disk_model(name)
+            disk.io, disk.changed_at, disk.sent_at = io, now, None
+            if disk.state == "missing":
+                disk.state = "unknown"
+            return
+        if io != disk.io:
+            disk.io, disk.changed_at, disk.sent_at = io, now, None
+            disk.state = "active"
+            return
+        if now - disk.changed_at < disk.seconds:
+            return
+        # Idle long enough. Ask again every spindown time while it stays
+        # idle: a S.M.A.R.T. query (smartd with power mode Never) can wake
+        # a disk without touching the counters. A sleeping disk only gets
+        # the power check, which does not wake it.
+        if disk.sent_at is not None and now - disk.sent_at < disk.seconds:
+            return
+        disk.sent_at = now
+        result = self.send_standby(disk.devicefile)
+        if result == "spun_down":
+            disk.state = "standby"
+            disk.last_standby = int(self.wall())
+            disk.spindowns += 1
+            log("%s (%s): idle %d min, spun down" % (
+                disk.name, disk.model or disk.devicefile,
+                (now - disk.changed_at) // 60))
+        elif result == "asleep":
+            disk.state = "standby"
+        else:
+            if disk.state != "failed":
+                log("%s (%s): spin down failed" % (
+                    disk.name, disk.model or disk.devicefile))
+            disk.state = "failed"
+
+    def status(self):
+        now = self.monotonic()
+        return {
+            "timestamp": int(self.wall()),
+            "poll": POLL_SECONDS,
+            "disks": [d.as_dict(now) for d in self.disks],
+        }
+
+
+def load_config(path=CONFIG_FILE):
+    """[{devicefile, seconds}] of the disks with a spindown time."""
+    with open(path) as f:
+        config = json.load(f)
+    disks, seen = [], set()
+    for entry in config.get("disks", []):
+        devicefile = entry.get("devicefile") or ""
+        seconds = standby_seconds(entry.get("spindowntime"))
+        if not devicefile or seconds is None or devicefile in seen:
+            continue
+        seen.add(devicefile)
+        disks.append({"devicefile": devicefile, "seconds": seconds})
+    return config, disks
+
+
+def write_status(status, path=STATUS_FILE):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    tmp = path + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(status, f)
+    os.replace(tmp, path)
+
+
+def cmd_run(args):
+    try:
+        config, disks = load_config(args.config)
+    except (OSError, ValueError) as e:
+        log("cannot read %s: %s" % (args.config, e))
+        return 1
+    if not disks:
+        log("no disk has a spindown time (Storage > Disks); idle")
+    for disk in disks:
+        log("%s: spin down after %d min idle" % (
+            disk["devicefile"], disk["seconds"] // 60))
+    watcher = Watcher(disks)
+    stop = threading.Event()
+    for sig in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
+        signal.signal(sig, lambda *_: stop.set())
+    while not stop.is_set():
+        watcher.poll()
+        try:
+            write_status(watcher.status(), args.status_file)
+        except OSError as e:
+            log("cannot write %s: %s" % (args.status_file, e))
+        stop.wait(POLL_SECONDS)
+    return 0
+
+
+def cmd_status(args):
+    try:
+        with open(args.status_file) as f:
+            status = json.load(f)
+    except (OSError, ValueError):
+        status = {}
+    if args.json:
+        print(json.dumps(status))
+        return 0
+    if not status:
+        print("spindownd is not running")
+        return 1
+    for disk in status.get("disks", []):
+        print("%-6s %-24s after %3d min  idle %5s  %s" % (
+            disk.get("device") or "-", disk.get("model") or disk["devicefile"],
+            disk["timeout"] // 60,
+            "-" if disk.get("idle") is None else "%dm" % (disk["idle"] // 60),
+            disk["state"]))
+    return 0
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(
+        prog="spindownd", description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--config", default=CONFIG_FILE)
+    parser.add_argument("--status-file", default=STATUS_FILE)
+    sub = parser.add_subparsers(dest="command", required=True)
+    sub.add_parser("run", help="run the watch loop")
+    status = sub.add_parser("status", help="print what the daemon last saw")
+    status.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+    return {"run": cmd_run, "status": cmd_status}[args.command](args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

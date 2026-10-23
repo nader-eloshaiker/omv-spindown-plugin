@@ -1,0 +1,27 @@
+# Developer helpers. The package itself builds with plain debhelper.
+.PHONY: test deb docker-deb deploy clean
+
+test:
+	python3 -m unittest discover -s tests -v
+
+# Requires a Debian 13 build host: apt install build-essential debhelper fakeroot
+deb:
+	dpkg-buildpackage -us -uc -b
+
+# Build on any Docker host (e.g. macOS); the .deb lands in dist/.
+DEBIAN_IMAGE ?= debian:trixie
+docker-deb:
+	mkdir -p dist
+	docker run --rm -v "$(CURDIR)":/src:ro -v "$(CURDIR)/dist":/dist $(DEBIAN_IMAGE) sh -ec '\
+		apt-get update -qq && \
+		apt-get install -y -qq --no-install-recommends build-essential debhelper fakeroot python3 >/dev/null && \
+		cp -r /src /build && cd /build && rm -rf dist && \
+		dpkg-buildpackage -us -uc -b && cp ../*.deb /dist/'
+	ls -l dist/*.deb
+
+# Install the newest dist/*.deb on a test NAS: make deploy NAS=root@host
+deploy:
+	tools/nas-deploy.sh $(NAS)
+
+clean:
+	fakeroot debian/rules clean

@@ -1,0 +1,18 @@
+[Unit]
+Description=Spin down idle disks that ignore their standby timer (openmediavault-spindown)
+Documentation=https://github.com/nader-eloshaiker/omv-spindown-plugin
+ConditionPathExists=/etc/spindownd/spindownd.json
+After=smartctl-hdparm.service
+
+[Service]
+Type=simple
+ExecStart=/usr/sbin/spindownd run
+Restart=on-failure
+RestartSec=30
+RuntimeDirectory=spindownd
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes
+
+[Install]
+WantedBy=multi-user.target

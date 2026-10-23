@@ -1,0 +1,6 @@
+version: "1.0"
+type: route
+data:
+  url: "/storage/spindown"
+  title: _("Spin down")
+  component: omv-storage-spindown-navigation-page

@@ -1,0 +1,64 @@
+#!/bin/sh
+#
+# This file is part of openmediavault-spindown.
+#
+# openmediavault-spindown is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+#
+# openmediavault-spindown is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with openmediavault-spindown. If not, see <http://www.gnu.org/licenses/>.
+
+set -e
+
+. /etc/default/openmediavault
+. /usr/share/openmediavault/scripts/helper-functions
+
+case "$1" in
+    configure)
+        # Activate package triggers.
+        dpkg-trigger update-workbench
+
+        # Initialize and migrate configuration database.
+        echo "Updating configuration database ..."
+        omv-confdbadm create "conf.service.spindown"
+        if [ -n "$2" ]; then
+            # omv-confdbadm only accepts PEP 440 versions.
+            omv-confdbadm migrate "conf.service.spindown" "${2%%~*}"
+        fi
+
+        # Salt notices changed states by modification time, and dpkg stamps
+        # files with the changelog date, so a rebuilt package of the same
+        # version would keep using salt's cached copy. Refresh the times.
+        touch /srv/salt/omv/deploy/spindown/*.sls \
+            /srv/salt/omv/deploy/spindown/files/* || :
+        omv-salt deploy run --no-color --quiet spindown || :
+    ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+
+    *)
+        echo "postinst called with unknown argument '$1'" >&2
+        exit 1
+    ;;
+esac
+
+#DEBHELPER#
+
+# Pick up a new daemon and unit file after an upgrade. dh_installsystemd
+# --no-start does not reload systemd, so do it here before restarting.
+if [ "$1" = "configure" ] && [ -n "$2" ]; then
+    if [ -d /run/systemd/system ]; then
+        systemctl --system daemon-reload >/dev/null || :
+    fi
+    deb-systemd-invoke try-restart spindownd.service || :
+fi
+
+exit 0

@@ -1,0 +1,13 @@
+[{
+	"type": "rpc",
+	"id": "rpc.spindown.setsettings",
+	"params": {
+		"type": "object",
+		"properties": {
+			"enable": {
+				"type": "boolean",
+				"required": true
+			}
+		}
+	}
+}]

@@ -1,0 +1,38 @@
+version: "1.0"
+type: component
+data:
+  name: omv-storage-spindown-disks-datatable-page
+  type: datatablePage
+  config:
+    autoReload: 10000
+    hasSearchField: false
+    limit: 0
+    stateId: 4b8e2f61-6a3d-4c1e-9f27-5d0b7a9c3e14
+    store:
+      proxy:
+        service: Spindown
+        get:
+          method: getDisks
+    columns:
+      - name: _("Disk")
+        prop: device
+        flexGrow: 1
+      - name: _("Model")
+        prop: model
+        flexGrow: 2
+      - name: _("Spin down after")
+        prop: timeout
+        flexGrow: 1
+      - name: _("Idle for")
+        prop: idle
+        flexGrow: 1
+      - name: _("State")
+        prop: statetext
+        flexGrow: 2
+      - name: _("Last spun down")
+        prop: laststandby
+        flexGrow: 1
+        cellTemplateName: relativeTime
+      - name: _("Spin-downs")
+        prop: spindowns
+        flexGrow: 1

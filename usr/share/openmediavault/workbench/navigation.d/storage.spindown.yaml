@@ -1,0 +1,8 @@
+version: "1.0"
+type: navigation-item
+data:
+  path: "storage.spindown"
+  text: _("Spin down")
+  position: 25
+  icon: "mdi:sleep"
+  url: "/storage/spindown"

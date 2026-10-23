@@ -1,0 +1,8 @@
+version: "1.0"
+type: navigation-item
+data:
+  path: "storage.spindown.disks"
+  text: _("Disks")
+  position: 20
+  icon: "mdi:harddisk"
+  url: "/storage/spindown/disks"

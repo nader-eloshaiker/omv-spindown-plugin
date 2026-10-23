@@ -1,0 +1,23 @@
+Source: openmediavault-spindown
+Section: admin
+XB-Plugin-Section: storage
+Priority: optional
+Maintainer: Nader Eloshaiker <1904325+nader-eloshaiker@users.noreply.github.com>
+Build-Depends: debhelper-compat (= 13), python3
+Standards-Version: 4.7.2
+Homepage: https://nader-eloshaiker.github.io/omv-spindown-plugin/
+Vcs-Git: https://github.com/nader-eloshaiker/omv-spindown-plugin.git
+Vcs-Browser: https://github.com/nader-eloshaiker/omv-spindown-plugin
+
+Package: openmediavault-spindown
+Architecture: all
+Depends: openmediavault (>= 8),
+         python3 (>= 3.9),
+         smartmontools,
+         ${misc:Depends}
+Description: OpenMediaVault plugin to spin down disks that ignore their timer
+ Some hard disks, notably WD Red drives, stop honouring the standby timer
+ openmediavault sets (Storage > Disks > Spindown time) and never sleep,
+ although they still obey an immediate standby command. This plugin
+ watches each disk's activity without waking it and, after the same
+ spindown time without reads or writes, puts the disk to sleep.

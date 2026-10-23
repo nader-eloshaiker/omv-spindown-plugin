@@ -1,0 +1,8 @@
+version: "1.0"
+type: navigation-item
+data:
+  path: "storage.spindown.settings"
+  text: _("Settings")
+  position: 10
+  icon: "mdi:cog"
+  url: "/storage/spindown/settings"
