@@ -2,7 +2,8 @@
 
 **[🌐 Project website](https://nader-eloshaiker.github.io/omv-spindown-plugin/)** ·
 [⬇️ Download](https://github.com/nader-eloshaiker/omv-spindown-plugin/releases/latest) ·
-[🐞 Report a problem](https://github.com/nader-eloshaiker/omv-spindown-plugin/issues)
+[🐞 Report a problem](https://github.com/nader-eloshaiker/omv-spindown-plugin/issues) ·
+[📝 The story on Medium](https://medium.com/@nader.eloshaiker/your-nas-disks-never-spin-down-a-free-fix-for-openmediavault-and-wd-red-drives-986f95cf27f3)
 
 **Your disks are set to spin down in OpenMediaVault, but they never do?
 This free plugin puts them to sleep.**

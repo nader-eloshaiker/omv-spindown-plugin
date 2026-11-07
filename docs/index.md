@@ -127,6 +127,12 @@ for it, or *Never*.
 
 OpenMediaVault 8. It is installed like any other plugin, from one file.
 
+### Where can I read more?
+
+How the problem was tracked down, and how the plugin came about:
+[Your NAS disks never spin down? A free fix for OpenMediaVault and WD Red
+drives](https://medium.com/@nader.eloshaiker/your-nas-disks-never-spin-down-a-free-fix-for-openmediavault-and-wd-red-drives-986f95cf27f3) on Medium.
+
 ## License
 
 Free and open source, GPL-3.0-or-later.
