@@ -4,6 +4,7 @@ description: >-
   Disks set to spin down in OpenMediaVault but never sleep, such as WD Red
   drives? This free OMV plugin puts them to sleep after their spindown
   time, without ever waking a sleeping disk.
+image: /images/banner.png
 ---
 
 # Make idle hard disks sleep in OpenMediaVault
@@ -83,6 +84,48 @@ stop the disk from sleeping here.
 If a disk is still idle after another spindown time, the plugin asks
 again, in case something like a S.M.A.R.T. check woke it without any
 reads or writes.
+
+## Common questions
+
+### Why won't my hard disks spin down in OpenMediaVault?
+
+OMV gives each disk its Spindown time, and from then on it is up to the
+disk to go to sleep. Many disks, WD Red drives in particular, ignore that
+timer and keep spinning. Others never get the chance because something
+keeps reading or writing them. The **Status** column on the Spin down
+page tells the two apart: a disk that counts down and falls asleep was
+ignoring its timer; a disk that keeps showing *In use* is being used.
+
+### Why do WD Red drives never go to sleep?
+
+Their firmware often ignores the standby timer the system gives them,
+yet they go to sleep straight away when told to. That is what this
+plugin does once the disk has been idle for its spindown time. Many
+owners report the same problem in
+[OMV issue #1892](https://github.com/openmediavault/openmediavault/issues/1892).
+
+### Will it wake my disks to check on them?
+
+No. It only reads the kernel's activity counters, which never touch the
+disk, and its sleep command first checks the power state and does
+nothing if the disk is already asleep.
+
+### Does it work with ZFS, RAID or mergerfs?
+
+Yes. It works on each physical disk, whatever is on it. It is used every
+day on a ZFS mirror of two WD Red disks. With ZFS, turn `atime` off on
+datasets on those disks, or reading a file counts as a write.
+
+### Is it bad for a disk to spin down?
+
+Every start wears the motor a little, and disks are rated for a set
+number of start/stop cycles. A disk that sleeps a few times a day is
+fine. If a disk keeps waking up every few minutes, choose a longer time
+for it, or *Never*.
+
+### Which versions of OpenMediaVault does it work with?
+
+OpenMediaVault 8. It is installed like any other plugin, from one file.
 
 ## License
 

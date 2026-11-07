@@ -6,6 +6,8 @@ description: >-
 url: https://nader-eloshaiker.github.io
 baseurl: /omv-spindown-plugin
 lang: en
+# Preview image for links shared on social sites and chat apps.
+image: /images/banner.png
 theme: jekyll-theme-cayman
 plugins:
   - jekyll-seo-tag
@@ -17,3 +19,6 @@ relative_links:
 github:
   is_project_page: true
   repository_url: https://github.com/nader-eloshaiker/omv-spindown-plugin
+# Maintainer notes, not useful to visitors.
+exclude:
+  - seo-notes.md
