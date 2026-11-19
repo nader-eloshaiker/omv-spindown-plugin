@@ -62,6 +62,9 @@ main() {
     fi
 
     start=$(git rev-parse --abbrev-ref HEAD)
+    # If anything below fails, drop the half-built branch and go back.
+    trap 'git reset -q --hard; git switch -q "$start"; git branch -q -D "$branch";
+          echo "upstream-release: failed; nothing was kept" >&2' EXIT
     git switch -q -c "$branch" upstream/main
     # Match the tag exactly, including deletions...
     git rm -rq .
@@ -69,13 +72,14 @@ main() {
     # ...except the fork-only paths, which keep the fork's own state.
     echo "$FORK_ONLY" | while read -r p; do
         [ -n "$p" ] || continue
-        git rm -rq --ignore-unmatch -- "$p"
+        git rm -rqf --ignore-unmatch -- "$p"
         if git cat-file -e "upstream/main:$p" 2>/dev/null; then
             git checkout upstream/main -- "$p"
         fi
     done
 
     if git diff --cached --quiet; then
+        trap - EXIT
         git switch -q "$start"
         git branch -q -D "$branch"
         echo "Nothing to send: the fork already matches $tag."
@@ -86,6 +90,7 @@ main() {
     notes=$(awk 'NR > 2 && /^ -- / { exit } NR > 2 { sub(/^  /, ""); print }' debian/changelog)
     git commit -q -m "openmediavault-spindown $version" -m "$notes" \
         -m "From $OWN_REPO $tag."
+    trap - EXIT
     git switch -q "$start"
 
     echo "Built $branch: the fork's main plus $tag."
