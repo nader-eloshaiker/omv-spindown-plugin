@@ -26,9 +26,11 @@ runs while any disk has a spindown time.
 6. Spinning disks down and up is a hardware action: tests on a real NAS
    need the owner's consent. Agents never type passwords.
 7. Run `make test` before every build.
-8. **Changes reach `main` only through a pull request.** Work on a branch,
-   open a pull request and let CI pass. Never push to `main` directly; the
-   ruleset refuses it.
+8. **Development happens in `nader-eloshaiker/omv-spindown-plugin`.**
+   Work on a branch there, open a pull request and let CI pass; never
+   push to its `main`. The omv-extras fork gets one pull request per
+   release, and only with the owner's OK. The process is in
+   [MAINTAINING.md](https://github.com/nader-eloshaiker/omv-spindown-plugin/blob/main/MAINTAINING.md).
 
 ## Layout
 

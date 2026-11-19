@@ -41,7 +41,8 @@ pull request.
 ## Releases
 
 The maintainer adds the `debian/changelog` entry and pushes a `v<version>`
-tag; CI builds the package and publishes the GitHub release.
+tag; CI builds the package and publishes the GitHub release. How releases
+reach the omv-extras fork is in [MAINTAINING.md](MAINTAINING.md).
 
 ## Code of conduct
 
