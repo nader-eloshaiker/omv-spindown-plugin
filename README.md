@@ -91,9 +91,9 @@ make deploy NAS=root@NAS_HOST
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) and the
-[code of conduct](CODE_OF_CONDUCT.md). Report security problems privately:
-see [SECURITY.md](SECURITY.md).
+See [CONTRIBUTING.md](https://github.com/nader-eloshaiker/omv-spindown-plugin/blob/main/CONTRIBUTING.md) and the
+[code of conduct](https://github.com/nader-eloshaiker/omv-spindown-plugin/blob/main/CODE_OF_CONDUCT.md). Report security problems
+privately: see [SECURITY.md](https://github.com/nader-eloshaiker/omv-spindown-plugin/blob/main/SECURITY.md).
 
 ## License
 
