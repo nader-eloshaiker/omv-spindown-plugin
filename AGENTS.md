@@ -26,6 +26,9 @@ runs while any disk has a spindown time.
 6. Spinning disks down and up is a hardware action: tests on a real NAS
    need the owner's consent. Agents never type passwords.
 7. Run `make test` before every build.
+8. **Changes reach `main` only through a pull request.** Work on a branch,
+   open a pull request and let CI pass. Never push to `main` directly; the
+   ruleset refuses it.
 
 ## Layout
 
