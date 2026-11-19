@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Project website
+    url: https://nader-eloshaiker.github.io/omv-spindown-plugin/
+    about: What the plugin does, how to install it and common questions.
+  - name: Problems in openmediavault itself
+    url: https://github.com/openmediavault/openmediavault/issues
+    about: Storage › Disks, the spindown time OMV hands to the disk, and the rest of OMV.

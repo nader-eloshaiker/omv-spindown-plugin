@@ -89,6 +89,12 @@ make docker-deb    # build the .deb in Docker (any OS); lands in dist/
 make deploy NAS=root@NAS_HOST
 ```
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) and the
+[code of conduct](CODE_OF_CONDUCT.md). Report security problems privately:
+see [SECURITY.md](SECURITY.md).
+
 ## License
 
 GPL-3.0-or-later. See [LICENSE](LICENSE).
