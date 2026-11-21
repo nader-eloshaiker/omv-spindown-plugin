@@ -34,3 +34,15 @@ header. Upload it under Settings › General › Social preview.
 [OMV issue #1892](https://github.com/openmediavault/openmediavault/issues/1892)
 and forum threads about WD Reds that never sleep are good places for a
 short reply linking the site.
+
+## On-page setup
+
+- Search titles and descriptions for pages whose Markdown has no front
+  matter are set under `defaults` in `_config.yml`, so the files read
+  cleanly on GitHub.
+- Every page shares `images/banner.png` as its link preview image.
+- The home page adds SoftwareApplication structured data
+  (`_includes/software-jsonld.html`): free, GPL-3.0, OpenMediaVault 8.
+- Visitor counts: GoatCounter (cookie-free, no consent banner), switched on
+  by `goatcounter:` in `_config.yml`.
+- The two plugin sites link to each other where it helps a reader.
