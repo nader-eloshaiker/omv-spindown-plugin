@@ -127,6 +127,12 @@ for it, or *Never*.
 
 OpenMediaVault 8. It is installed like any other plugin, from one file.
 
+### I run OpenMediaVault on a QNAP. Is there a plugin for its fans and lights?
+
+Yes: [openmediavault-qnap](https://nader-eloshaiker.github.io/omv-qnap-plugin/)
+adds quiet fan control, working status and disk LEDs, and buttons on
+QNAP NAS models. It works alongside this plugin.
+
 ### Where can I read more?
 
 How the problem was tracked down, and how the plugin came about:

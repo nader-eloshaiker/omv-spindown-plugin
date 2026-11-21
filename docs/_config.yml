@@ -19,6 +19,22 @@ plugins:
 relative_links:
   enabled: true
   collections: false
+# Who made the sites, for search engines (jekyll-seo-tag).
+author:
+  name: Nader Eloshaiker
+  url: https://github.com/nader-eloshaiker
+social:
+  name: Nader Eloshaiker
+  links:
+    - https://github.com/nader-eloshaiker
+    - https://medium.com/@nader.eloshaiker
+
+defaults:
+  - scope: {path: ""}
+    values: {image: /images/banner.png}
+  - scope: {path: googlef4b3a21d0a442387.html}
+    values: {sitemap: false}
+
 github:
   is_project_page: true
   repository_url: https://github.com/nader-eloshaiker/omv-spindown-plugin
